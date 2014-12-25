@@ -1,0 +1,10 @@
+DEVICE_PUSH_TOKEN_TYPE_IOS = "ios"
+DEVICE_PUSH_TOKEN_TYPE_ANDROID = "android"
+
+DEVICE_PUSH_TOKEN_TYPES = (
+    (DEVICE_PUSH_TOKEN_TYPE_IOS, "iOS"),
+    (DEVICE_PUSH_TOKEN_TYPE_ANDROID, "Android"),
+)
+
+SLOOP_SERVER_DOMAIN = "http://pushserver.hipo.biz:8193"
+SLOOP_DEVICE_TOKEN_PATH_TEMPLATE = "/application/%s/device/notify"
