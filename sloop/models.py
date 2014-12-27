@@ -5,7 +5,7 @@ from django.contrib.gis.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.encoding import smart_unicode
 from django.utils.http import urlencode
-from django.utils.translation import ugettext_lazy as _, activate, get_language
+from django.utils.translation import ugettext_lazy as _, activate, get_language, gettext
 from django.template.defaultfilters import truncatechars
 
 from sloop.constants import *
@@ -134,7 +134,7 @@ class DeviceBaseClass(models.Model):
         token_language_code = self.locale[:2] if self.locale else "en"
         try:
             activate(token_language_code)
-            message = message % {}
+            message = gettext(message)
         finally:
             activate(current_language)
 
