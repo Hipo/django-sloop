@@ -1,7 +1,6 @@
 from distutils.core import setup
 
 install_requires = [
-    'django',
     'requests',
 ]
 
