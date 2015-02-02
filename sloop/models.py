@@ -110,7 +110,7 @@ class DeviceBaseClass(models.Model):
         })
         return url
 
-    def send_push_message(self, message, url=None, sound="default", extra=None, *args, **kwargs):
+    def send_push_message(self, message, url=None, sound="default", extra=None, category=None, *args, **kwargs):
         """
         Sends push message using device token
         """
@@ -125,8 +125,12 @@ class DeviceBaseClass(models.Model):
             'sound': sound,
             'custom': extra_data,
             'badge': self.get_badge_count(),
+            'category': category
         }
-        r = requests.post(self.get_server_call_url(), data=json.dumps(data))
+        data.update(kwargs)
+
+        headers = {'content-type': 'application/json'}
+        r = requests.post(self.get_server_call_url(), data=json.dumps(data), headers=headers)
         r.raise_for_status()
         return True
 
