@@ -86,7 +86,7 @@ class DeviceBaseClass(models.Model):
         """
         return 0
 
-    def get_exra_data(self, extra_data):
+    def get_extra_data(self, extra_data):
         """
         A placeholder for the extra push data.
         """
@@ -114,7 +114,7 @@ class DeviceBaseClass(models.Model):
         """
         Sends push message using device token
         """
-        extra_data = self.get_exra_data(extra)
+        extra_data = self.get_extra_data(extra)
         if url:
             extra_data["url"] = url
 
