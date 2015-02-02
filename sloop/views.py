@@ -14,7 +14,7 @@ class BaseHelloView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.DATA, files=request.FILES, partial=True)
+        serializer = self.get_serializer(data=request.DATA)
         if serializer.is_valid():
             # Create push token object if necessary
             push_token, created = self.model.objects.get_or_create(
