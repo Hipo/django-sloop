@@ -134,6 +134,26 @@ class DeviceBaseClass(models.Model):
         r.raise_for_status()
         return True
 
+    def send_silent_push_message(self, extra=None, url=None, content_available=True, *args, **kwargs):
+        extra_data = self.get_extra_data(extra)
+        if url:
+            extra_data["url"] = url
+
+        data = {
+            'device_token': self.token,
+            'device_type': self.device_type,
+            'content-available': content_available,
+            'sound': '',
+            'badge': self.get_badge_count(),
+            'custom': extra_data
+        }
+        data.update(kwargs)
+
+        headers = {'content-type': 'application/json'}
+        r = requests.post(self.get_server_call_url(), data=json.dumps(data), headers=headers)
+        r.raise_for_status()
+        return True
+
     def translate_message(self, message, current_language):
         token_language_code = self.locale[:2] if self.locale else "en"
         try:
