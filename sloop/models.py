@@ -86,7 +86,7 @@ class DeviceBaseClass(models.Model):
         """
         return 0
 
-    def get_exra_data(self, extra_data):
+    def get_extra_data(self, extra_data):
         """
         A placeholder for the extra push data.
         """
@@ -110,11 +110,11 @@ class DeviceBaseClass(models.Model):
         })
         return url
 
-    def send_push_message(self, message, url=None, sound="default", extra=None, *args, **kwargs):
+    def send_push_message(self, message, url=None, sound="default", extra=None, category=None, *args, **kwargs):
         """
         Sends push message using device token
         """
-        extra_data = self.get_exra_data(extra)
+        extra_data = self.get_extra_data(extra)
         if url:
             extra_data["url"] = url
 
@@ -125,8 +125,32 @@ class DeviceBaseClass(models.Model):
             'sound': sound,
             'custom': extra_data,
             'badge': self.get_badge_count(),
+            'category': category
         }
-        r = requests.post(self.get_server_call_url(), data=json.dumps(data))
+        data.update(kwargs)
+
+        headers = {'content-type': 'application/json'}
+        r = requests.post(self.get_server_call_url(), data=json.dumps(data), headers=headers)
+        r.raise_for_status()
+        return True
+
+    def send_silent_push_message(self, extra=None, url=None, content_available=True, *args, **kwargs):
+        extra_data = self.get_extra_data(extra)
+        if url:
+            extra_data["url"] = url
+
+        data = {
+            'device_token': self.token,
+            'device_type': self.device_type,
+            'content-available': content_available,
+            'sound': '',
+            'badge': self.get_badge_count(),
+            'custom': extra_data
+        }
+        data.update(kwargs)
+
+        headers = {'content-type': 'application/json'}
+        r = requests.post(self.get_server_call_url(), data=json.dumps(data), headers=headers)
         r.raise_for_status()
         return True
 
