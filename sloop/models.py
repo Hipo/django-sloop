@@ -121,6 +121,12 @@ class DeviceBaseClass(models.Model):
         """
         return truncatechars(message, 255)
 
+    def process_sloop_response(self, data):
+        """
+        Process the message coming from sloop
+        """
+        pass
+
     def get_server_call_url(self):
         """
         Generates the url for the server call
@@ -173,6 +179,7 @@ class DeviceBaseClass(models.Model):
         headers = {'content-type': 'application/json'}
         r = requests.post(self.get_server_call_url(), data=json.dumps(data), headers=headers)
         r.raise_for_status()
+        self.process_sloop_response(r.json())
 
     def translate_message(self, message, current_language):
         token_language_code = self.locale[:2] if self.locale else "en"
