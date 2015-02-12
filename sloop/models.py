@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _, activate, get_language,
 from django.template.defaultfilters import truncatechars
 
 from sloop.constants import *
-from sloop.tasks import send_push_message
+from sloop.tasks import send_push_notification, send_silent_push_notification
 
 
 class PushNotificationMixin(object):
@@ -27,25 +27,48 @@ class PushNotificationMixin(object):
             return None
         return push_token
 
-    def send_push_message(self, message, url=None, sound=None, extra=None):
+    def send_push_message(self, *args, **kwargs):
+        return self.send_push_notification(*args, **kwargs)
+
+    def send_push_notification(self, message, url=None, sound=None, extra=None, category=None):
         """
         Sends a push notification to the user's last active device
         """
         # Print message to console if this is a development environment.
         if settings.DEBUG:
-            print "Push message: %s / Receiver: %s" % (message, self)
+            print "Push notification: %s / Receiver: %s" % (message, self)
 
         token = self.active_push_token
         if not token:
             return False
 
         message = token.translate_message(message, current_language=get_language())
-        send_push_message.delay(
+        send_push_notification.delay(
             token.id,
             message,
             url,
             sound,
-            extra
+            extra,
+            category
+        )
+        return True
+
+    def send_silent_push_notification(self, extra=None, content_available=True):
+        """
+        Sends a push notification to the user's last active device
+        """
+        # Print message to console if this is a development environment.
+        if settings.DEBUG:
+            print "Silent push notification to: %s" % self
+
+        token = self.active_push_token
+        if not token:
+            return False
+
+        send_silent_push_notification.delay(
+            token.id,
+            extra,
+            content_available
         )
         return True
 
@@ -110,7 +133,7 @@ class DeviceBaseClass(models.Model):
         })
         return url
 
-    def send_push_message(self, message, url=None, sound="default", extra=None, category=None, *args, **kwargs):
+    def send_push_notification(self, message, url, sound, extra, category, *args, **kwargs):
         """
         Sends push message using device token
         """
@@ -128,16 +151,11 @@ class DeviceBaseClass(models.Model):
             'category': category
         }
         data.update(kwargs)
-
-        headers = {'content-type': 'application/json'}
-        r = requests.post(self.get_server_call_url(), data=json.dumps(data), headers=headers)
-        r.raise_for_status()
+        self._send_payload(data)
         return True
 
-    def send_silent_push_message(self, extra=None, url=None, content_available=True, *args, **kwargs):
+    def send_silent_push_notification(self, extra, content_available, *args, **kwargs):
         extra_data = self.get_extra_data(extra)
-        if url:
-            extra_data["url"] = url
 
         data = {
             'device_token': self.token,
@@ -148,11 +166,13 @@ class DeviceBaseClass(models.Model):
             'custom': extra_data
         }
         data.update(kwargs)
+        self._send_payload(data)
+        return True
 
+    def _send_payload(self, data):
         headers = {'content-type': 'application/json'}
         r = requests.post(self.get_server_call_url(), data=json.dumps(data), headers=headers)
         r.raise_for_status()
-        return True
 
     def translate_message(self, message, current_language):
         token_language_code = self.locale[:2] if self.locale else "en"
