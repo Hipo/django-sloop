@@ -13,6 +13,7 @@ def send_push_notification(token_id, message, url, sound, extra, category):
     device.send_push_notification(message, url, sound, extra, category)
     return "Message: %s" % message
 
+
 @task()
 def send_silent_push_notification(token_id, extra, content_available):
     """

@@ -88,6 +88,7 @@ class DeviceBaseClass(models.Model):
         choices=DEVICE_PUSH_TOKEN_TYPES,
         default=DEVICE_PUSH_TOKEN_TYPE_IOS
     )
+    device_model = models.CharField(_("Device Model"), max_length=255, blank=True, null=False)
 
     class Meta:
         verbose_name = _("Device Push Token")
