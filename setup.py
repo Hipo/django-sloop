@@ -8,7 +8,7 @@ install_requires = [
 setup(
   name = 'sloop',
   packages = ['sloop'], # this must be the same as the name above
-  version = '0.3',
+  version = '0.3.1',
   description = 'Django package of the sloop push notification service',
   author = 'H. Yigit Guler',
   author_email = 'yigit@hipolbs.com',
