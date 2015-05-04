@@ -1,3 +1,4 @@
+from django.conf.urls import patterns, url
 from django.core.urlresolvers import reverse
 from django.views.generic import FormView
 from django.template.response import TemplateResponse
@@ -62,16 +63,15 @@ class PushNotificationView(FormView):
 
 class SloopAdminMixin(object):
     """
-
+    Sloop admin mixin for sending push notifications
     """
-
-    # def get_urls(self):
-    #     urls = super(UserProfileAdmin, self).get_urls()
-    #     custom_urls = patterns('',
-    #         url(r'^send-push-notification/$', self.admin_site.admin_view(self.push_notification_view),
-    #             name='%s_%s_send_push_notification' % (self.model._meta.app_label, self.model._meta.model_name))
-    #     )
-    #     return custom_urls + urls
+    def get_push_notification_urls(self):
+        # urls = super(SloopAdminMixin, self).get_urls()
+        custom_urls = patterns('',
+            url(r'^send-push-notification/$', self.admin_site.admin_view(self.push_notification_view),
+                name='%s_%s_send_push_notification' % (self.model._meta.app_label, self.model._meta.model_name))
+        )
+        return custom_urls
 
     def get_receivers_queryset(self, receiver_ids):
         """

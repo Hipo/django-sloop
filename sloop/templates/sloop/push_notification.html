@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+
+    <div class="breadcrumbs">
+        <a href="../../../">{% trans "Home" %}</a> &rsaquo;
+        <a href="../../">{{ app_label|capfirst|escape }}</a> &rsaquo;
+        <a href="../">{{ opts.model_name|capfirst|escape }}</a> &rsaquo;
+        Send Push Notification
+    </div>
+
+{% endblock %}
+
+{% block content %}
+
+    <form action="{{ view_url }}" method="POST">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <table>
+            <tr>
+                <td>{{ form.message.label }}</td>
+                <td>{{ form.message }}</td>
+                <td>{{ form.message.errors }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.url.label }}</td>
+                <td>{{ form.url }}</td>
+                <td>{{ form.url.errors }}</td>
+            </tr>
+            <tr>
+                <td>{{ form.extra.label }}</td>
+                <td>{{ form.extra }}</td>
+                <td>{{ form.extra.errors }}</td>
+            </tr>
+        </table>
+        {{ form.receivers }}
+        <input type="submit" value="Send"/>
+    </form>
+
+{% endblock %}

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 
-class HelloSerializer(serializers.Serializer):
+class DeviceSerializer(serializers.Serializer):
     """
     The serializer of the "Hello" end point
     """

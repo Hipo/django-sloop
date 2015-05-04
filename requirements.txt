@@ -1,2 +1,3 @@
 requests
 django>=1.4
+djangorestframework
