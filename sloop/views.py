@@ -43,6 +43,9 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
     def get_object(self):
         """
         Override get_object for delete endpoint
