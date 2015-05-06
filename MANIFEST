@@ -2,6 +2,7 @@
 setup.cfg
 setup.py
 sloop/__init__.py
+sloop/admin.py
 sloop/constants.py
 sloop/models.py
 sloop/serializers.py

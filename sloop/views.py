@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 
-from sloop.serializers import HelloSerializer
+from sloop.serializers import DeviceSerializer
 
 
 class BaseDeviceView(CreateAPIView, DestroyModelMixin):
@@ -12,7 +12,7 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
     An endpoint for creating / deleting devices.
     If you are customizing DeviceBaseClass, you should use your own views.
     """
-    serializer_class = HelloSerializer
+    serializer_class = DeviceSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_request_data(self):
@@ -42,6 +42,9 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
             push_token.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
 
     def get_object(self):
         """

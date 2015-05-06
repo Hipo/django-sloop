@@ -7,5 +7,5 @@ class DeviceSerializer(serializers.Serializer):
     """
     push_token = serializers.CharField(required=True)
     device_type = serializers.CharField(required=False)
-    device_model = serializers.CharField(required=False)
+    device_model = serializers.CharField(required=False, default="")
     locale = serializers.CharField(required=False)
