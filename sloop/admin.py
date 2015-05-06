@@ -32,7 +32,7 @@ class PushNotificationView(FormView):
 
     def form_valid(self, form):
         receivers = form.cleaned_data['receivers']
-        filtered_queryset = self.model_admin.get_receivers_queryset(receivers)
+        filtered_queryset = self.kwargs.get('model_admin').get_receivers_queryset(receivers)
         for user in filtered_queryset:
             user.send_push_notification(form.cleaned_data['message'],
                                         extra=form.cleaned_data['extra'])
@@ -77,7 +77,7 @@ class SloopAdminMixin(object):
         """
         Filter your queryset as you want, then return it.
         """
-        raise NotImplementedError('get_receivers_queryset must be implemented in order to send push notifications.')
+        return receiver_ids
 
     def push_notification_view(self, request):
         push_notification_view = PushNotificationView.as_view()
