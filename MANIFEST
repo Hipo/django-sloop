@@ -9,3 +9,4 @@ sloop/serializers.py
 sloop/tasks.py
 sloop/utils.py
 sloop/views.py
+sloop/templates/sloop/push_notification.html
