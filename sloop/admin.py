@@ -81,7 +81,6 @@ class SloopAdminMixin(object):
 
     def push_notification_view(self, request):
         push_notification_view = PushNotificationView.as_view()
-        push_notification_view.model_admin = self
         return push_notification_view(request, model_admin=self)
 
     def send_push_notification(self, request, queryset):
