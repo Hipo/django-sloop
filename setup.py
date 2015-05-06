@@ -14,6 +14,8 @@ setup(
   author_email = 'yigit@hipolbs.com',
   url = 'https://github.com/hipo/django-sloop', # use the URL to the github repo
   keywords='django, push',
+  include_package_data=True,
+  package_data={'templates':'templates/sloop/push_notification.html'},
   classifiers = [],
   install_requires=install_requires,
 
