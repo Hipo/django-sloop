@@ -31,10 +31,10 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
             push_token, created = self.get_queryset().get_or_create(
                 token=serializer.data.get("push_token"),
                 device_type=serializer.data.get("device_type"),
-                device_model=serializer.data.get("device_model"),
                 defaults={
                     "profile": request.user,
                     "locale": serializer.data.get("locale"),
+                    "device_model": serializer.data.get("device_model")
                 }
             )
             if push_token.profile_id != request.user.id:
