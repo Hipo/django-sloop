@@ -4,6 +4,8 @@ from django.views.generic import FormView
 from django.template.response import TemplateResponse
 from django import forms
 
+from sloop.constants import SLOOP_SEND_PUSH_TOKEN_URL_FIELD_INITIAL_TEXT
+
 import json
 
 
@@ -11,7 +13,8 @@ class PushNotificationForm(forms.Form):
     message = forms.CharField(max_length=255, label='Message:')
     extra = forms.CharField(max_length=255, widget=forms.Textarea, required=False,
                             initial=json.dumps(dict()), label='Data as JSON:')
-    url = forms.URLField(max_length=255, required=False, label='URL:', initial='http://')
+    url = forms.CharField(max_length=255, required=False, label='URL:',
+                          initial=SLOOP_SEND_PUSH_TOKEN_URL_FIELD_INITIAL_TEXT)
     receivers = forms.CharField(widget=forms.HiddenInput)
 
     def clean(self):
