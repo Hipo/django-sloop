@@ -1,13 +1,13 @@
+from django.conf import settings
 from django.conf.urls import patterns, url
 from django.core.urlresolvers import reverse
 from django.views.generic import FormView
 from django.template.response import TemplateResponse
 from django import forms
 
-from sloop.constants import SLOOP_SEND_PUSH_TOKEN_URL_FIELD_INITIAL_TEXT
-
 import json
 
+SLOOP_SEND_PUSH_TOKEN_URL_FIELD_INITIAL_TEXT = getattr(settings, 'SLOOP_SEND_PUSH_TOKEN_URL_FIELD_INITIAL_TEXT', None)
 
 class PushNotificationForm(forms.Form):
     message = forms.CharField(max_length=255, label='Message:')

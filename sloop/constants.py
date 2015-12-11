@@ -8,4 +8,3 @@ DEVICE_PUSH_TOKEN_TYPES = (
 
 SLOOP_SERVER_DOMAIN = "http://pushserver.hipo.biz:8193"
 SLOOP_DEVICE_TOKEN_PATH_TEMPLATE = "/application/%s/device/notify"
-SLOOP_SEND_PUSH_TOKEN_URL_FIELD_INITIAL_TEXT = "momentapp://"
