@@ -1,6 +1,13 @@
-from django.db.models.loading import get_model
 from django.conf import settings
 from celery.task import task
+
+try:
+    # Django 1.9
+    from django.apps import apps
+    get_model = apps.get_model
+except ImportError:
+    # Django < 1.9
+    from django.db.models.loading import get_model
 
 
 @task()
