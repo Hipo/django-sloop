@@ -58,4 +58,4 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
         """
         Override get_object for delete endpoint
         """
-        return self.get_queryset(token=self.get_token(), profile_id=self.request.user.id)
+        return self.get_queryset().filter(token=self.get_token(), profile_id=self.request.user.id)
