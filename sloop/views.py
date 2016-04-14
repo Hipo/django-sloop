@@ -15,21 +15,25 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
     serializer_class = DeviceSerializer
     permission_classes = (IsAuthenticated,)
 
-    def get_token(self):
-        """
-        To support both DRF 2 and 3
-        """
+    def get_request_data(self):
         try:
             data = self.request.data
         except AttributeError:
             data = self.request.DATA
+        return data
+
+    def get_token(self):
+        """
+        To support both DRF 2 and 3
+        """
+        data = self.get_request_data()
         key = 'push_token'
         from_url = self.kwargs.get(key)
         from_body = data.get(key)
         return from_url or from_body
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=self.get_token())
+        serializer = self.get_serializer(data=self.get_request_data())
         if serializer.is_valid():
             # Create push token object if necessary
             push_token, created = self.get_queryset().get_or_create(
