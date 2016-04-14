@@ -19,8 +19,11 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
         """
         To support both DRF 2 and 3
         """
+        try:
+            data = self.request.data
+        except AttributeError:
+            data = self.request.DATA
         key = 'push_token'
-        data = getattr(self.request, 'data', self.request.DATA)
         from_url = self.kwargs.get(key)
         from_body = data.get(key)
         return from_url or from_body
