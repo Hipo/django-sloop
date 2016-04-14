@@ -26,7 +26,7 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
         return from_url or from_body
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=self.get_request_data())
+        serializer = self.get_serializer(data=self.get_token())
         if serializer.is_valid():
             # Create push token object if necessary
             push_token, created = self.get_queryset().get_or_create(
