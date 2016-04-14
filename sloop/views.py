@@ -15,14 +15,15 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
     serializer_class = DeviceSerializer
     permission_classes = (IsAuthenticated,)
 
-    def get_request_data(self):
+    def get_token(self):
         """
         To support both DRF 2 and 3
         """
-        try:
-            return self.request.data
-        except AttributeError:
-            return self.request.DATA
+        key = 'push_token'
+        data = getattr(self.request, 'data', self.request.DATA)
+        from_url = self.kwargs.get(key)
+        from_body = data.get(key)
+        return from_url or from_body
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=self.get_request_data())
@@ -50,4 +51,4 @@ class BaseDeviceView(CreateAPIView, DestroyModelMixin):
         """
         Override get_object for delete endpoint
         """
-        return get_object_or_404(self.get_queryset(), token=self.get_request_data().get('push_token'))
+        return get_object_or_404(self.get_queryset(), token=self.get_token())
