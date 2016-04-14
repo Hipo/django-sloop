@@ -78,15 +78,13 @@ class DeviceBaseClass(models.Model):
     A push token for a device associated with a user profile
     """
     profile = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="push_tokens", verbose_name=_("Profile"))
-    locale = models.CharField(_("locale"), max_length=255, default="en_US")
+    locale = models.CharField(_("locale"), max_length=255)
     token = models.CharField(_("Token"), max_length=255)
     date_updated = models.DateTimeField(_("Date Updated"), auto_now=True)
     device_type = models.CharField(
         _("Device Type"),
         max_length=255,
-        blank=True,
         choices=DEVICE_PUSH_TOKEN_TYPES,
-        default=DEVICE_PUSH_TOKEN_TYPE_IOS
     )
     device_model = models.CharField(_("Device Model"), max_length=255, blank=True, null=False)
 
