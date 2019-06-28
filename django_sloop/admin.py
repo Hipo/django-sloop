@@ -1,25 +1,26 @@
-from django.conf import settings
-from django.conf.urls import patterns, url
-from django.core.urlresolvers import reverse
+from django.conf.urls import url
+from django.contrib import messages
+from django.urls import reverse
+from django.utils.http import urlencode
 from django.views.generic import FormView
 from django.template.response import TemplateResponse
 from django import forms
 
 import json
 
-SLOOP_SEND_PUSH_TOKEN_URL_FIELD_INITIAL_TEXT = getattr(settings, 'SLOOP_SEND_PUSH_TOKEN_URL_FIELD_INITIAL_TEXT', None)
 
 class PushNotificationForm(forms.Form):
+
     message = forms.CharField(max_length=255, label='Message:')
-    extra = forms.CharField(max_length=255, widget=forms.Textarea, required=False,
-                            initial=json.dumps(dict()), label='Data as JSON:')
-    url = forms.CharField(max_length=255, required=False, label='URL:',
-                          initial=SLOOP_SEND_PUSH_TOKEN_URL_FIELD_INITIAL_TEXT)
+    extra = forms.CharField(max_length=255, widget=forms.Textarea, required=False, initial=json.dumps(dict()), label='Extra data as JSON:')
+    url = forms.CharField(max_length=255, required=False, label='URL:')
     receivers = forms.CharField(widget=forms.HiddenInput)
 
     def clean(self):
         try:
             self.cleaned_data['extra'] = json.loads(self.cleaned_data['extra'])
+            if self.cleaned_data['url']:
+                self.cleaned_data['extra']["url"] = self.cleaned_data['url']
             self.cleaned_data['receivers'] = json.loads(self.cleaned_data['receivers'])
         except (TypeError, ValueError) as ex:
             self.add_error('extra', ex.message)
@@ -30,22 +31,34 @@ class PushNotificationForm(forms.Form):
 
 
 class PushNotificationView(FormView):
-    template_name = 'push_notification.html'
+
+    template_name = 'django_sloop/push_notification.html'
     form_class = PushNotificationForm
 
     def form_valid(self, form):
-        receivers = form.cleaned_data['receivers']
-        filtered_queryset = self.kwargs.get('model_admin').get_receivers_queryset(receivers)
-        for user in filtered_queryset:
-            user.send_push_notification(form.cleaned_data['message'],
-                                        extra=form.cleaned_data['extra'])
+        self.receivers = form.cleaned_data['receivers']
+        model_admin = self.kwargs.get('model_admin')
+        receiver_ids = model_admin.get_receivers_queryset(self.receivers)
+        for receiver_id in receiver_ids:
+            user = model_admin.model.objects.get(pk=receiver_id)
+            user.send_push_notification_async(form.cleaned_data['message'], extra=form.cleaned_data['extra'])
 
         return super(PushNotificationView, self).form_valid(form)
 
+    def get_initial(self):
+        initial = super(PushNotificationView, self).get_initial()
+        if not initial.get("receivers") and self.request.GET.get("receivers"):
+            initial["receivers"] = json.loads(self.request.GET.get("receivers"))
+        return initial
+
     def get_success_url(self):
+        messages.info(self.request, "Push notification has been sent.")
         model_admin = self.kwargs.get('model_admin')
-        return reverse('admin:%s_%s_changelist' % (model_admin.model._meta.app_label,
-                                                   model_admin.model._meta.model_name))
+        url = reverse('admin:%s_%s_send_push_notification' % (model_admin.model._meta.app_label, model_admin.model._meta.model_name))
+        url += "?" + urlencode({
+            'receivers': json.dumps(self.receivers)
+        })
+        return url
 
     def get_context_data(self, **kwargs):
         context = super(PushNotificationView, self).get_context_data(**kwargs)
@@ -70,10 +83,10 @@ class SloopAdminMixin(object):
     """
     def get_push_notification_urls(self):
         # urls = super(SloopAdminMixin, self).get_urls()
-        custom_urls = patterns('',
+        custom_urls = [
             url(r'^send-push-notification/$', self.admin_site.admin_view(self.push_notification_view),
                 name='%s_%s_send_push_notification' % (self.model._meta.app_label, self.model._meta.model_name))
-        )
+        ]
         return custom_urls
 
     def get_receivers_queryset(self, receiver_ids):
@@ -87,6 +100,8 @@ class SloopAdminMixin(object):
         return push_notification_view(request, model_admin=self)
 
     def send_push_notification(self, request, queryset):
+        # Action method.
+
         admin_site = self.admin_site
         opts = self.model._meta
         receivers = list(queryset.values_list('id', flat=True))
@@ -101,4 +116,4 @@ class SloopAdminMixin(object):
             'view_url': reverse('admin:%s_%s_send_push_notification' % (opts.app_label, opts.model_name))
         }
 
-        return TemplateResponse(request, 'push_notification.html', context=context, current_app=admin_site.name)
+        return TemplateResponse(request, 'django_sloop/push_notification.html', context=context)

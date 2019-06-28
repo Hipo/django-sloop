@@ -1,22 +1,42 @@
-from distutils.core import setup
+import os
+from setuptools import setup
 
-install_requires = [
-    'requests',
-]
+with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
+    README = readme.read()
 
+# allow setup.py to be run from any path
+os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-  name = 'sloop',
-  packages = ['sloop'], # this must be the same as the name above
-  version = '0.3.6.6',
-  description = 'Django package of the sloop push notification service',
-  author = 'H. Yigit Guler',
-  author_email = 'yigit@hipolbs.com',
-  url = 'https://github.com/hipo/django-sloop', # use the URL to the github repo
-  keywords='django, push',
-  include_package_data=True,
-  classifiers = [],
-  install_requires=install_requires,
-
+    name='django-sloop',
+    version='1.0.0',
+    packages=['django_sloop', 'test_app'],
+    include_package_data=True,
+    license='Apache-2.0',
+    description='Django application to send push notifications to IOS and Android devices using Amazon SNS.',
+    long_description=README,
+    long_description_content_type="text/markdown",
+    author='hipo',
+    author_email='pypi@hipolabs.com',
+    url='https://github.com/Hipo/django-sloop',
+    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
+    classifiers=[
+        'Environment :: Web Environment',
+        'Framework :: Django :: 1.11',
+        'Framework :: Django :: 2.0',
+        'Framework :: Django :: 2.1',
+        'Framework :: Django :: 2.2',
+        'Intended Audience :: Developers',
+        'Operating System :: OS Independent',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+    ],
 )
-

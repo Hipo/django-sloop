@@ -1,14 +1,13 @@
-*.pyc
-!.gitignore
 dist/
 env/
-dist/
 *.egg-info
 .idea
 .pypirc
 .tox/
 .cache/
+.coverage
 coverage.xml
 .coverage
+*.pyc
 __pycache__
 .DS_Store
