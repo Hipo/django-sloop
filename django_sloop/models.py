@@ -101,7 +101,7 @@ class AbstractSNSDevice(models.Model):
 
     def __str__(self):
         return smart_text(_("Push Token %(push_token)s for %(user)s") % {
-            "profile": self.user.full_name,
+            "user": self.user.full_name,
             "push_token": self.push_token,
         })
 
