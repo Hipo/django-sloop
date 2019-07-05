@@ -1,18 +1,16 @@
 import json
 import time
+from unittest import skipIf
 
 from botocore.exceptions import ClientError
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from mock import Mock
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.test import APIClient
 
 from .handlers import SNSHandler
 from .models import AbstractSNSDevice
-from .serializers import DeviceSerializer
 from .settings import DJANGO_SLOOP_SETTINGS
 
 User = get_user_model()
@@ -228,9 +226,17 @@ class DeviceTests(TestCase):
         self.assertFalse(Device.objects.filter(id=self.ios_device.id).exists())
 
 
+@skipIf('rest_framework.authtoken' not in settings.INSTALLED_APPS, "rest_framework.authtoken is not in installed apps.")
 class DeviceAPITests(TestCase):
 
     def setUp(self):
+        from rest_framework.authtoken.models import Token
+        from rest_framework.test import APIClient
+        from rest_framework import status
+        self.Token = Token
+        self.APIClient = APIClient
+        self.status = status
+
         self.client, self.user = self.create_test_user_client()
         self.ios_device = Device.objects.create(user=self.user, push_token=TEST_IOS_PUSH_TOKEN, platform=Device.PLATFORM_IOS)
         self.android_device = Device.objects.create(user=self.user, push_token=TEST_ANDROID_PUSH_TOKEN, platform=Device.PLATFORM_ANDROID)
@@ -239,20 +245,22 @@ class DeviceAPITests(TestCase):
     def create_test_user_client(self, **user_data):
         millis = int(round(time.time() * 1000))
         user = User.objects.create_user("username" + str(millis), "username@test.com", "test123")
-        token, _ = Token.objects.get_or_create(user=user)
-        client = APIClient()
+        token, _ = self.Token.objects.get_or_create(user=user)
+        client = self.APIClient()
         client.default_format = 'json'
         client.force_authenticate(user=user, token=token.key)
 
         return client, user
 
     def test_api_create_device(self):
+        from .serializers import DeviceSerializer
+
         data = {
             "push_token": "test_ios_push_token2",
             "platform": Device.PLATFORM_IOS
         }
         response = self.client.post(self.create_delete_url, data=data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, self.status.HTTP_201_CREATED)
         device = self.user.devices.get(**data)
         self.assertEqual(response.data, DeviceSerializer(device).data)
 
@@ -263,9 +271,9 @@ class DeviceAPITests(TestCase):
             "push_token": self.ios_device.push_token
         }
         response = non_device_owner_client.delete(self.create_delete_url, data=data)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, self.status.HTTP_404_NOT_FOUND)
 
         response = self.client.delete(self.create_delete_url, data=data)
 
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, self.status.HTTP_204_NO_CONTENT)
         self.assertFalse(Device.objects.filter(id=self.ios_device.id).exists())
