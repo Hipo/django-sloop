@@ -1,5 +1,8 @@
+import json
+
 from django.conf import settings
 from django.contrib.gis.db import models
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.utils.encoding import smart_text
@@ -123,8 +126,16 @@ class AbstractSNSDevice(models.Model):
         message = self.prepare_message(message)
 
         handler = SNSHandler(device=self)
-        response = handler.send_push_notification(message, url, badge_count, sound, extra, category, **kwargs)
-        return response
+        message, response = handler.send_push_notification(message, url, badge_count, sound, extra, category, **kwargs)
+
+        push_message = PushMessage.objects.create(
+            device=self,
+            body=message,
+            data=json.loads(message),
+            sns_mesasge_id=response["MessageId"],
+            sns_response=response
+        )
+        return push_message
 
     def send_silent_push_notification(self, extra=None, badge_count=None, content_available=None, **kwargs):
         """
@@ -132,5 +143,31 @@ class AbstractSNSDevice(models.Model):
         """
         from .handlers import SNSHandler
         handler = SNSHandler(device=self)
-        response = handler.send_silent_push_notification(extra, badge_count, content_available, **kwargs)
-        return response
+        message, response = handler.send_silent_push_notification(extra, badge_count, content_available, **kwargs)
+
+        push_message = PushMessage.objects.create(
+            device=self,
+            data=json.loads(message),
+            sns_mesasge_id=response["MessageId"],
+            sns_response=response
+        )
+
+        return push_message
+
+
+class PushMessage(models.Model):
+
+    device = models.ForeignKey(DJANGO_SLOOP_SETTINGS["DEVICE_MODEL"], related_name="push_message", on_delete=models.CASCADE)
+    # Can be blank for silent messages.
+    body = models.CharField(blank=True)
+    data = JSONField(null=False, blank=False)
+    sns_message_id = models.CharField(max_length=255, unique=True)
+    sns_response = JSONField(null=False, blank=False)
+
+    date_created = models.DateTimeField(default=timezone.now)
+    date_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Push Message"
+        verbose_name_plural = "Push Messages"
+
