@@ -21,6 +21,10 @@ from django_sloop.models import AbstractSNSDevice
 
 class Device(AbstractSNSDevice):
     pass
+    
+    # (Optional) if you need to override Meta.
+    class Meta(AbstractSNSDevice.Meta):
+        pass
 ```
 
 4. Run migrations.
@@ -43,6 +47,14 @@ DJANGO_SLOOP_SETTINGS = {
 ```
 
 6. Add django_sloop.models.PushNotificationMixin to your User model.
+```python
+class User(PushNotificationMixin, ...):
+    pass
+
+user.send_push_notification_async(message="Sample push notification.")
+
+```
+
 
 7. Add django_sloop.admin.SloopAdminMixin to your UserAdmin to enable sending push messages to users from Django admin panel.
 
