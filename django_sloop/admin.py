@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.contrib import admin
 from django.contrib import messages
 from django.urls import reverse
 from django.utils.http import urlencode
@@ -7,6 +8,8 @@ from django.template.response import TemplateResponse
 from django import forms
 
 import json
+
+from django_sloop.models import PushMessage
 
 
 class PushNotificationForm(forms.Form):
@@ -117,3 +120,12 @@ class SloopAdminMixin(object):
         }
 
         return TemplateResponse(request, 'django_sloop/push_notification.html', context=context)
+
+
+class PushMessageAdmin(admin.ModelAdmin):
+
+    search_fields = ["body", "sns_message_id"]
+    list_display = ["id", "device", "sns_message_id", "date_created", "date_updated"]
+    readonly_fields = ["id", "device",  "body",  "device", "sns_message_id", "date_created", "date_updated"]
+
+admin.site.register(PushMessage, PushMessageAdmin)

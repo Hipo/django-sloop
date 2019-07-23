@@ -2,3 +2,4 @@
 djangorestframework>=3
 mock
 psycopg2-binary
+ipython

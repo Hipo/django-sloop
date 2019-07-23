@@ -170,10 +170,10 @@ class AbstractSNSDevice(models.Model):
 class PushMessage(models.Model):
 
     device = models.ForeignKey(DJANGO_SLOOP_SETTINGS["DEVICE_MODEL"], related_name="push_messages", on_delete=models.CASCADE)
-    # Can be blank for silent messages.
-    body = models.TextField(null=False, blank=False)
+    body = models.TextField()
+    # Can be null for silent messages.
     sns_message_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
-    sns_response = models.TextField(null=False, blank=False)
+    sns_response = models.TextField()
 
     date_created = models.DateTimeField(default=timezone.now)
     date_updated = models.DateTimeField(auto_now=True)

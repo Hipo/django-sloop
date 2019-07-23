@@ -15,5 +15,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+COPY requirements.txt .
+COPY requirements_dev.txt .
+
 RUN pip install --upgrade pip
 RUN pip install tox
+RUN pip install -r requirements_dev.txt
