@@ -2,13 +2,13 @@ import json
 
 from django.conf import settings
 from django.contrib.gis.db import models
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.utils.encoding import smart_text
 from django.utils.translation import ugettext_lazy as _
 from django.template.defaultfilters import truncatechars
 
+from django_sloop.exceptions import DeviceIsNotActive
 from .settings import DJANGO_SLOOP_SETTINGS
 from . import tasks
 
@@ -26,7 +26,7 @@ class PushNotificationMixin(object):
         Finds and returns the last active device with push token for this user, if available
         """
         try:
-            device = self.devices.latest()
+            device = self.devices.filter(deleted_at__isnull=True).order_by("-date_created").first()
         except ObjectDoesNotExist:
             return None
         return device
@@ -91,6 +91,8 @@ class AbstractSNSDevice(models.Model):
     model = models.CharField(max_length=255, blank=True)
     sns_platform_endpoint_arn = models.CharField(_("SNS Platform Endpoint"), max_length=255, null=True, unique=True)
 
+    deleted_at = models.DateTimeField(null=True)
+
     date_created = models.DateTimeField(default=timezone.now)
     date_updated = models.DateTimeField(auto_now=True)
 
@@ -109,7 +111,8 @@ class AbstractSNSDevice(models.Model):
         })
 
     def invalidate(self):
-        self.delete()
+        self.deleted_at = timezone.now()
+        self.save()
 
     def prepare_message(self, message):
         """
@@ -123,46 +126,54 @@ class AbstractSNSDevice(models.Model):
         """
         from .handlers import SNSHandler
 
+        if self.deleted_at:
+            raise DeviceIsNotActive
+
         message = self.prepare_message(message)
 
         handler = SNSHandler(device=self)
-        message, response = handler.send_push_notification(message, url, badge_count, sound, extra, category, **kwargs)
+        message_payload, response = handler.send_push_notification(message, url, badge_count, sound, extra, category, **kwargs)
 
-        push_message = PushMessage.objects.create(
-            device=self,
-            body=message,
-            data=json.loads(message),
-            sns_mesasge_id=response["MessageId"],
-            sns_response=response
-        )
-        return push_message
+        if DJANGO_SLOOP_SETTINGS["LOG_SENT_MESSAGES"]:
+            PushMessage.objects.create(
+                device=self,
+                body=message_payload,
+                sns_message_id=response.get("MessageId") or None,  # Can bu null for failed message.
+                sns_response=response
+            )
+
+        return response
 
     def send_silent_push_notification(self, extra=None, badge_count=None, content_available=None, **kwargs):
         """
         Sends silent push notification
         """
         from .handlers import SNSHandler
+
+        if self.deleted_at:
+            raise DeviceIsNotActive
+
         handler = SNSHandler(device=self)
-        message, response = handler.send_silent_push_notification(extra, badge_count, content_available, **kwargs)
+        message_payload, response = handler.send_silent_push_notification(extra, badge_count, content_available, **kwargs)
 
-        push_message = PushMessage.objects.create(
-            device=self,
-            data=json.loads(message),
-            sns_mesasge_id=response["MessageId"],
-            sns_response=response
-        )
+        if DJANGO_SLOOP_SETTINGS["LOG_SENT_MESSAGES"]:
+            PushMessage.objects.create(
+                device=self,
+                body=message_payload,
+                sns_message_id=response.get("MessageId") or None,  # Can bu null for failed message.
+                sns_response=response
+            )
 
-        return push_message
+        return response
 
 
 class PushMessage(models.Model):
 
-    device = models.ForeignKey(DJANGO_SLOOP_SETTINGS["DEVICE_MODEL"], related_name="push_message", on_delete=models.CASCADE)
+    device = models.ForeignKey(DJANGO_SLOOP_SETTINGS["DEVICE_MODEL"], related_name="push_messages", on_delete=models.CASCADE)
     # Can be blank for silent messages.
-    body = models.CharField(blank=True)
-    data = JSONField(null=False, blank=False)
-    sns_message_id = models.CharField(max_length=255, unique=True)
-    sns_response = JSONField(null=False, blank=False)
+    body = models.TextField(null=False, blank=False)
+    sns_message_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    sns_response = models.TextField(null=False, blank=False)
 
     date_created = models.DateTimeField(default=timezone.now)
     date_updated = models.DateTimeField(auto_now=True)
@@ -170,4 +181,3 @@ class PushMessage(models.Model):
     class Meta:
         verbose_name = "Push Message"
         verbose_name_plural = "Push Messages"
-

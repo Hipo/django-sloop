@@ -4,6 +4,7 @@ INSTALLED_APPS += [
     'rest_framework',
     "rest_framework.authtoken",
     'django_sloop',
+    'test_app.devices',
 ]
 
 
@@ -15,7 +16,8 @@ DJANGO_SLOOP_SETTINGS = {
     "SNS_IOS_SANDBOX_ENABLED": False,
     "SNS_ANDROID_APPLICATION_ARN": "test_android_arn",
     "DEFAULT_SOUND": "",
-    "DEVICE_MODEL": "django_sloop.Device",
+    "DEVICE_MODEL": "devices.Device",
+    "LOG_SENT_MESSAGES": True,
 }
 
 CELERY_TASK_ALWAYS_EAGER = True

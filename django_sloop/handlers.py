@@ -194,7 +194,7 @@ class SNSHandler(object):
             else:
                 raise
 
-            return None
+            return message, exc.response
 
         if settings.DEBUG:
             print(publish_result)

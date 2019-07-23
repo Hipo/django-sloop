@@ -1,5 +1,6 @@
 import json
 import time
+from random import randint
 from unittest import skipIf
 
 from botocore.exceptions import ClientError
@@ -9,8 +10,8 @@ from django.test import TestCase
 from django.urls import reverse
 from mock import Mock
 
+from django_sloop.utils import get_device_model
 from .handlers import SNSHandler
-from .models import AbstractSNSDevice
 from .settings import DJANGO_SLOOP_SETTINGS
 
 User = get_user_model()
@@ -20,8 +21,7 @@ TEST_IOS_PUSH_TOKEN = "test_ios_push_token"
 TEST_ANDROID_PUSH_TOKEN = "test_android_push_token"
 
 
-class Device(AbstractSNSDevice):
-    pass
+Device = get_device_model()
 
 
 class SNSHandlerTests(TestCase):
@@ -48,7 +48,7 @@ class SNSHandlerTests(TestCase):
         sns_client.create_platform_endpoint.return_value = {
             'EndpointArn': TEST_SNS_ENDPOINT_ARN
         }
-        sns_client.publish.return_value = "published"
+        sns_client.publish.return_value = ""
         SNSHandler.client = sns_client
         handler = SNSHandler(self.ios_device)
         self.assertEqual(handler.get_or_create_platform_endpoint_arn(), TEST_SNS_ENDPOINT_ARN)
@@ -84,7 +84,10 @@ class DeviceTests(TestCase):
 
     def test_send_ios_push_notification(self):
         sns_client = Mock()
-        sns_client.publish.return_value = "published"
+        sns_test_message_id = "test_message_" + str(randint(0, 9999))
+        sns_client.publish.return_value = {
+            "MessageId": sns_test_message_id
+        }
         SNSHandler.client = sns_client
 
         self.ios_device.sns_platform_endpoint_arn = "test_ios_arn"
@@ -114,9 +117,18 @@ class DeviceTests(TestCase):
 
         self.assertDictEqual(expected_message, actual_message)
 
+        push_message = self.ios_device.push_messages.get()
+        self.assertEqual(push_message.sns_message_id, sns_test_message_id)
+        self.assertEqual(push_message.sns_response, str({
+            "MessageId": sns_test_message_id
+        }))
+
     def test_send_android_push_notification(self):
         sns_client = Mock()
-        sns_client.publish.return_value = "published"
+        sns_test_message_id = "test_message_" + str(randint(0, 9999))
+        sns_client.publish.return_value = {
+            "MessageId": sns_test_message_id
+        }
         SNSHandler.client = sns_client
 
         self.android_device.sns_platform_endpoint_arn = "test_android_arn"
@@ -146,9 +158,18 @@ class DeviceTests(TestCase):
 
         self.assertDictEqual(expected_message, actual_message)
 
+        push_message = self.android_device.push_messages.get()
+        self.assertEqual(push_message.sns_message_id, sns_test_message_id)
+        self.assertEqual(push_message.sns_response, str({
+            "MessageId": sns_test_message_id
+        }))
+
     def test_send_ios_silent_push_notification(self):
         sns_client = Mock()
-        sns_client.publish.return_value = "published"
+        sns_test_message_id = "test_message_" + str(randint(0, 9999))
+        sns_client.publish.return_value = {
+            "MessageId": sns_test_message_id
+        }
         SNSHandler.client = sns_client
 
         self.ios_device.sns_platform_endpoint_arn = "test_ios_arn"
@@ -177,9 +198,18 @@ class DeviceTests(TestCase):
 
         self.assertDictEqual(expected_message, actual_message)
 
+        push_message = self.ios_device.push_messages.get()
+        self.assertEqual(push_message.sns_message_id, sns_test_message_id)
+        self.assertEqual(push_message.sns_response, str({
+            "MessageId": sns_test_message_id
+        }))
+
     def test_send_android_silent_push_notification(self):
         sns_client = Mock()
-        sns_client.publish.return_value = "published"
+        sns_test_message_id = "test_message_" + str(randint(0, 9999))
+        sns_client.publish.return_value = {
+            "MessageId": sns_test_message_id
+        }
         SNSHandler.client = sns_client
 
         self.android_device.sns_platform_endpoint_arn = "test_android_arn"
@@ -208,6 +238,12 @@ class DeviceTests(TestCase):
 
         self.assertDictEqual(expected_message, actual_message)
 
+        push_message = self.android_device.push_messages.get()
+        self.assertEqual(push_message.sns_message_id, sns_test_message_id)
+        self.assertEqual(push_message.sns_response, str({
+            "MessageId": sns_test_message_id
+        }))
+
     def test_invalidate_device_if_push_message_fails(self):
         sns_client = Mock()
         SNSHandler.client = sns_client
@@ -223,7 +259,16 @@ class DeviceTests(TestCase):
         self.ios_device.send_push_notification(message="test")
 
         # Device must be deleted.
-        self.assertFalse(Device.objects.filter(id=self.ios_device.id).exists())
+        self.ios_device.refresh_from_db()
+        self.assertIsNotNone(self.ios_device.deleted_at)
+
+        push_message = self.ios_device.push_messages.get()
+        self.assertIsNone(push_message.sns_message_id)
+        self.assertEqual(push_message.sns_response, str({
+            "Error": {
+                "Code": "EndpointDisabled"
+            }
+        }))
 
 
 @skipIf('rest_framework.authtoken' not in settings.INSTALLED_APPS, "rest_framework.authtoken is not in installed apps.")
@@ -276,4 +321,5 @@ class DeviceAPITests(TestCase):
         response = self.client.delete(self.create_delete_url, data=data)
 
         self.assertEqual(response.status_code, self.status.HTTP_204_NO_CONTENT)
-        self.assertFalse(Device.objects.filter(id=self.ios_device.id).exists())
+        self.ios_device.refresh_from_db()
+        self.assertIsNotNone(self.ios_device.deleted_at)

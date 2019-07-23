@@ -27,9 +27,7 @@ class Device(AbstractSNSDevice):
         pass
 ```
 
-4. Run migrations.
-
-5. Make sure that you fill necessary information at the settings file:
+4. Make sure that you fill necessary information at the settings file:
 
 ```python
 # settings.py
@@ -42,9 +40,14 @@ DJANGO_SLOOP_SETTINGS = {
     "SNS_IOS_SANDBOX_ENABLED": False,
     "SNS_ANDROID_APPLICATION_ARN": "test_android_arn",
     "DEFAULT_SOUND": "",
-    "DEVICE_MODEL": "users.Device",
+    "DEVICE_MODEL": "module_name.Device",
 }
 ```
+
+You cannot change the DEVICE_MODEL setting during the lifetime of a project (i.e. once you have made and migrated models that depend on it) without serious effort. The model it refers to must be available in the first migration of
+the app that it lives in.
+
+5. Create migrations for newly created Device model and migrate.
 
 6. Add django_sloop.models.PushNotificationMixin to your User model.
 ```python
@@ -65,7 +68,9 @@ from django_sloop.admin import SloopAdminMixin
 from django.contrib import admin
 
 class UserAdmin(SloopAdminMixin, admin.ModelAdmin):
-    pass
+    
+    actions = ("send_push_notification", )
+    
 ```
 
 8. Add django rest framework urls to create and delete device.
