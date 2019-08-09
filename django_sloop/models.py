@@ -89,9 +89,9 @@ class AbstractSNSDevice(models.Model):
     push_token = models.CharField(max_length=255, null=True)
     platform = models.CharField(max_length=255, choices=PLATFORM_CHOICES)
     model = models.CharField(max_length=255, blank=True)
-    sns_platform_endpoint_arn = models.CharField(_("SNS Platform Endpoint"), max_length=255, null=True, unique=True)
+    sns_platform_endpoint_arn = models.CharField(_("SNS Platform Endpoint"), max_length=255, null=True, blank=True, unique=True)
 
-    deleted_at = models.DateTimeField(null=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     date_created = models.DateTimeField(default=timezone.now)
     date_updated = models.DateTimeField(auto_now=True)
@@ -137,9 +137,10 @@ class AbstractSNSDevice(models.Model):
         if DJANGO_SLOOP_SETTINGS["LOG_SENT_MESSAGES"]:
             PushMessage.objects.create(
                 device=self,
-                body=message_payload,
+                body=message,
+                data=message_payload,
                 sns_message_id=response.get("MessageId") or None,  # Can bu null for failed message.
-                sns_response=response
+                sns_response=json.dumps(response)
             )
 
         return response
@@ -159,9 +160,9 @@ class AbstractSNSDevice(models.Model):
         if DJANGO_SLOOP_SETTINGS["LOG_SENT_MESSAGES"]:
             PushMessage.objects.create(
                 device=self,
-                body=message_payload,
+                data=message_payload,
                 sns_message_id=response.get("MessageId") or None,  # Can bu null for failed message.
-                sns_response=response
+                sns_response=json.dumps(response)
             )
 
         return response
@@ -171,7 +172,7 @@ class PushMessage(models.Model):
 
     device = models.ForeignKey(DJANGO_SLOOP_SETTINGS["DEVICE_MODEL"], related_name="push_messages", on_delete=models.CASCADE)
     body = models.TextField()
-    # Can be null for silent messages.
+    data = models.TextField()
     sns_message_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
     sns_response = models.TextField()
 

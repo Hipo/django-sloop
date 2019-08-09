@@ -198,5 +198,4 @@ class SNSHandler(object):
 
         if settings.DEBUG:
             print(publish_result)
-
         return message, publish_result

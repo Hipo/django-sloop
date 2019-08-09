@@ -119,7 +119,7 @@ class DeviceTests(TestCase):
 
         push_message = self.ios_device.push_messages.get()
         self.assertEqual(push_message.sns_message_id, sns_test_message_id)
-        self.assertEqual(push_message.sns_response, str({
+        self.assertEqual(push_message.sns_response, json.dumps({
             "MessageId": sns_test_message_id
         }))
 
@@ -160,7 +160,7 @@ class DeviceTests(TestCase):
 
         push_message = self.android_device.push_messages.get()
         self.assertEqual(push_message.sns_message_id, sns_test_message_id)
-        self.assertEqual(push_message.sns_response, str({
+        self.assertEqual(push_message.sns_response, json.dumps({
             "MessageId": sns_test_message_id
         }))
 
@@ -200,7 +200,7 @@ class DeviceTests(TestCase):
 
         push_message = self.ios_device.push_messages.get()
         self.assertEqual(push_message.sns_message_id, sns_test_message_id)
-        self.assertEqual(push_message.sns_response, str({
+        self.assertEqual(push_message.sns_response, json.dumps({
             "MessageId": sns_test_message_id
         }))
 
@@ -240,7 +240,7 @@ class DeviceTests(TestCase):
 
         push_message = self.android_device.push_messages.get()
         self.assertEqual(push_message.sns_message_id, sns_test_message_id)
-        self.assertEqual(push_message.sns_response, str({
+        self.assertEqual(push_message.sns_response, json.dumps({
             "MessageId": sns_test_message_id
         }))
 
@@ -264,7 +264,7 @@ class DeviceTests(TestCase):
 
         push_message = self.ios_device.push_messages.get()
         self.assertIsNone(push_message.sns_message_id)
-        self.assertEqual(push_message.sns_response, str({
+        self.assertEqual(push_message.sns_response, json.dumps({
             "Error": {
                 "Code": "EndpointDisabled"
             }

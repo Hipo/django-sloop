@@ -84,13 +84,12 @@ class SloopAdminMixin(object):
     """
     Sloop admin mixin for sending push notifications
     """
-    def get_push_notification_urls(self):
-        # urls = super(SloopAdminMixin, self).get_urls()
-        custom_urls = [
+    def get_urls(self):
+        urls = super(SloopAdminMixin, self).get_urls()
+        return [
             url(r'^send-push-notification/$', self.admin_site.admin_view(self.push_notification_view),
                 name='%s_%s_send_push_notification' % (self.model._meta.app_label, self.model._meta.model_name))
-        ]
-        return custom_urls
+        ] + urls
 
     def get_receivers_queryset(self, receiver_ids):
         """
@@ -125,7 +124,12 @@ class SloopAdminMixin(object):
 class PushMessageAdmin(admin.ModelAdmin):
 
     search_fields = ["body", "sns_message_id"]
-    list_display = ["id", "device", "sns_message_id", "date_created", "date_updated"]
+    list_display = ["id", "body", "error_message", "device", "sns_message_id", "date_created", "date_updated"]
     readonly_fields = ["id", "device",  "body",  "device", "sns_message_id", "date_created", "date_updated"]
+
+    def error_message(self, obj):
+        error = json.loads(obj.sns_response).get("Error")
+        if error:
+            return error.get("Message")
 
 admin.site.register(PushMessage, PushMessageAdmin)
