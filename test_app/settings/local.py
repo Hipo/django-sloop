@@ -5,8 +5,8 @@ INSTALLED_APPS += [
     "rest_framework.authtoken",
     'django_sloop',
     'test_app.devices',
+    'test_app.users',
 ]
-
 
 DJANGO_SLOOP_SETTINGS = {
     "AWS_REGION_NAME": "",
