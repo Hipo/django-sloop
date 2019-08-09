@@ -11,13 +11,13 @@ RUN apt-get update && apt-get install -y \
 	libpq-dev \
 	gdal-bin \
 	python3-distutils \
-	python-pip
+	python3-pip
 
 WORKDIR /app
 
 COPY requirements.txt .
 COPY requirements_dev.txt .
 
-RUN pip install --upgrade pip
-RUN pip install tox
-RUN pip install -r requirements_dev.txt
+RUN pip3 install --upgrade pip
+RUN pip3 install tox
+RUN pip3 install -r requirements_dev.txt

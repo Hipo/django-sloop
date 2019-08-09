@@ -10,7 +10,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 setup(
     name='django-sloop',
     version='1.0.0',
-    packages=['django_sloop', 'test_app'],
+    packages=['django_sloop'],
     include_package_data=True,
     license='Apache-2.0',
     description='Django application to send push notifications to IOS and Android devices using Amazon SNS.',

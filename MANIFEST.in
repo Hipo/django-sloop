@@ -1,2 +1,2 @@
 include README.md
-include django_sloop/templates/*
+graft django_sloop
