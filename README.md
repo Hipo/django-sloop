@@ -49,6 +49,13 @@ the app that it lives in.
 
 5. Create migrations for newly created Device model and migrate.
 
+**Note:** django_sloop's migrations must run after your Device is created. If you run into a problem while running migrations add following to the your migration file where the Device is created.
+```
+run_before = [
+   ('django_sloop', '0001_initial'),
+]
+```
+
 6. Add django_sloop.models.PushNotificationMixin to your User model.
 ```python
 class User(PushNotificationMixin, ...):
