@@ -149,7 +149,7 @@ class SNSHandler(object):
         }
         apns_string = json.dumps(apns_bundle, ensure_ascii=False)
 
-        if DJANGO_SLOOP_SETTINGS.get("IOS_SANDBOX_ENABLED"):
+        if DJANGO_SLOOP_SETTINGS.get("SNS_IOS_SANDBOX_ENABLED"):
             return {
                 'APNS_SANDBOX': apns_string
             }
