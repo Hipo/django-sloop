@@ -39,6 +39,7 @@ DJANGO_SLOOP_SETTINGS = {
     "SNS_IOS_APPLICATION_ARN": "test_ios_arn",
     "SNS_IOS_SANDBOX_ENABLED": False,
     "SNS_ANDROID_APPLICATION_ARN": "test_android_arn",
+    "LOG_SENT_MESSAGES": False,  # False by default.
     "DEFAULT_SOUND": "",
     "DEVICE_MODEL": "module_name.Device",
 }
