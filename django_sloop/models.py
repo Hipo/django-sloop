@@ -139,7 +139,7 @@ class AbstractSNSDevice(models.Model):
                 device=self,
                 body=message,
                 data=message_payload,
-                sns_message_id=response.get("MessageId") or None,  # Can bu null for failed message.
+                sns_message_id=response.get("MessageId") or None,  # Can be null for failed message.
                 sns_response=json.dumps(response)
             )
 
@@ -161,7 +161,7 @@ class AbstractSNSDevice(models.Model):
             PushMessage.objects.create(
                 device=self,
                 data=message_payload,
-                sns_message_id=response.get("MessageId") or None,  # Can bu null for failed message.
+                sns_message_id=response.get("MessageId") or None,  # Can be null for failed message.
                 sns_response=json.dumps(response)
             )
 
