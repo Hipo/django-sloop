@@ -95,8 +95,4 @@ urlpatterns = [
 ]
 ```
 
-
-
-
-
 Done!
