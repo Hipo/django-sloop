@@ -125,7 +125,7 @@ class PushMessageAdmin(admin.ModelAdmin):
 
     search_fields = ["body", "sns_message_id"]
     list_display = ["id", "body", "error_message", "device", "sns_message_id", "date_created", "date_updated"]
-    readonly_fields = ["id", "device",  "body",  "device", "sns_message_id", "date_created", "date_updated"]
+    readonly_fields = ["id", "device",  "body",  "data", "sns_message_id", "sns_response", "date_created", "date_updated"]
 
     def error_message(self, obj):
         error = json.loads(obj.sns_response).get("Error")
