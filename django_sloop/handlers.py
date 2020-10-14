@@ -33,7 +33,10 @@ class SNSHandler(object):
     @property
     def application_arn(self):
         if self.device.platform == AbstractSNSDevice.PLATFORM_IOS:
-            application_arn = DJANGO_SLOOP_SETTINGS.get("SNS_IOS_APPLICATION_ARN")
+            if self.device.is_sandbox_enabled:
+                application_arn = DJANGO_SLOOP_SETTINGS.get("SNS_IOS_SANDBOX_APPLICATION_ARN")
+            else:
+                application_arn = DJANGO_SLOOP_SETTINGS.get("SNS_IOS_APPLICATION_ARN")
         elif self.device.platform == AbstractSNSDevice.PLATFORM_ANDROID:
             application_arn = DJANGO_SLOOP_SETTINGS.get("SNS_ANDROID_APPLICATION_ARN")
         else:
@@ -125,7 +128,7 @@ class SNSHandler(object):
         }
         apns_string = json.dumps(apns_bundle, ensure_ascii=False)
 
-        if DJANGO_SLOOP_SETTINGS.get("SNS_IOS_SANDBOX_ENABLED"):
+        if self.device.is_sandbox_enabled:
             return {
                 'APNS_SANDBOX': apns_string
             }
@@ -149,7 +152,7 @@ class SNSHandler(object):
         }
         apns_string = json.dumps(apns_bundle, ensure_ascii=False)
 
-        if DJANGO_SLOOP_SETTINGS.get("SNS_IOS_SANDBOX_ENABLED"):
+        if self.device.is_sandbox_enabled:
             return {
                 'APNS_SANDBOX': apns_string
             }

@@ -13,7 +13,7 @@ DJANGO_SLOOP_SETTINGS = {
     "AWS_ACCESS_KEY_ID": "",
     "AWS_SECRET_ACCESS_KEY": "",
     "SNS_IOS_APPLICATION_ARN": "test_ios_arn",
-    "SNS_IOS_SANDBOX_ENABLED": False,
+    "SNS_IOS_SANDBOX_APPLICATION_ARN": "test_ios_sandbox_arn",
     "SNS_ANDROID_APPLICATION_ARN": "test_android_arn",
     "DEFAULT_SOUND": "",
     "DEVICE_MODEL": "devices.Device",

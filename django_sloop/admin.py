@@ -9,7 +9,9 @@ from django import forms
 
 import json
 
+from django_sloop.handlers import SNSHandler
 from django_sloop.models import PushMessage
+from django.utils.translation import ugettext_lazy as _
 
 
 class PushNotificationForm(forms.Form):
@@ -121,15 +123,81 @@ class SloopAdminMixin(object):
         return TemplateResponse(request, 'django_sloop/push_notification.html', context=context)
 
 
+class DeviceAdmin(admin.ModelAdmin):
+
+    list_display = ["user", "platform", "model", "is_sandbox_enabled", "deleted_at", "date_created", "date_updated"]
+    readonly_fields = ["user", "platform", "model", "deleted_at", "date_created", "date_updated"]
+    search_fields = ["user_id"]
+
+    def save_model(self, request, obj, form, change):
+        # Clear sns_platform_endpoint_arn if sandbox mode is changed.
+        # https://docs.djangoproject.com/en/2.2/ref/models/instances/#refreshing-objects-from-database
+        new_value = obj.is_sandbox_enabled
+        delattr(obj, "is_sandbox_enabled")
+        # Fetch field from database.
+        old_value = obj.is_sandbox_enabled
+
+        if new_value != old_value:
+            obj.sns_platform_endpoint_arn = ""
+
+        obj.is_sandbox_enabled = new_value
+
+        super(DeviceAdmin, self).save_model(request, obj, form, change)
+
+
 class PushMessageAdmin(admin.ModelAdmin):
 
     search_fields = ["body", "sns_message_id"]
     list_display = ["id", "body", "error_message", "device", "sns_message_id", "date_created", "date_updated"]
-    readonly_fields = ["id", "device",  "body",  "data", "sns_message_id", "sns_response", "date_created", "date_updated"]
+    readonly_fields = ["id", "device",  "body",  "data", "sns_message_id", "sns_response", "payload", "date_created", "date_updated"]
+
+    actions = ["resend_push_notification"]
 
     def error_message(self, obj):
         error = json.loads(obj.sns_response).get("Error")
         if error:
             return error.get("Message")
+
+    def resend_push_notification(self, request, queryset):
+        if queryset.count() > 1:
+            messages.add_message(request, messages.ERROR, _("You can only send one push message at a time."))
+        push_message = queryset.get()
+
+        try:
+            handler = SNSHandler(device=push_message.device)
+            handler._send_payload(data=json.loads(push_message.data))
+            messages.add_message(request, messages.SUCCESS, _("Push message has been sent."))
+        except Exception as exc:
+            messages.add_message(request, messages.ERROR, str(exc))
+
+    def resend_push_notification(self, request, queryset):
+        if queryset.count() > 1:
+            messages.add_message(request, messages.ERROR, _("You can only send one push message at a time."))
+        push_message = queryset.get()
+        device = push_message.device
+        try:
+            payload = self.payload(push_message)
+            payload = payload.get("data") or payload.get("aps")
+
+            message = payload.get("alert")
+            sound = payload.get("sound")
+            extra = payload.get("custom")
+            badge_count = payload.get("badge")
+            category = payload.get("category")
+            if message:
+                device.send_push_notification(message, url=extra.get("url"), badge_count=badge_count, sound=sound, extra=extra, category=category)
+                messages.add_message(request, messages.SUCCESS, _("Push message has been sent."))
+            else:
+                device.send_silent_push_notification(extra=extra, badge_count=badge_count, content_available=None)
+                messages.add_message(request, messages.SUCCESS, _("Silent push message has been sent."))
+        except Exception as exc:
+            messages.add_message(request, messages.ERROR, str(exc))
+
+    def payload(self, push_message):
+        payload = json.loads(push_message.data)
+        payload = payload.get("GCM") or payload.get("APNS") or payload.get("APNS_SANDBOX")
+        payload = json.loads(payload)
+        return payload
+
 
 admin.site.register(PushMessage, PushMessageAdmin)
