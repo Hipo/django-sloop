@@ -1,5 +1,5 @@
 -r requirements.txt
-djangorestframework>=3
-mock
-psycopg2-binary
 ipython
+pytest-django
+pytest-cov
+mock

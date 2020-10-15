@@ -135,3 +135,44 @@ Done!
 
 
 **Endpoint details will be available in the projects api documentation as well. There can be project level changes so please go to projects api documentation.**
+
+CONTRIBUTION
+=================
+
+**TESTS**
+- Make sure that you add the test for contributed field to test/test_fields.py
+and run with command before sending a pull request:
+
+```bash
+$ pip install tox  # if not already installed
+$ tox
+```
+
+Or, if you prefer using Docker (recommended):
+
+```bash
+docker build -t django-sloop .
+docker run -v $(pwd):/app -it django-sloop /bin/bash
+tox
+```
+
+**README**
+- Make sure that you add the documentation for the field added to README.md
+
+
+LICENSE
+====================
+
+Copyright DRF EXTRA FIELDS HIPO
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

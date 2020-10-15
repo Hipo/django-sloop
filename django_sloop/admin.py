@@ -9,7 +9,6 @@ from django import forms
 
 import json
 
-from django_sloop.handlers import SNSHandler
 from django_sloop.models import PushMessage
 from django.utils.translation import ugettext_lazy as _
 
@@ -149,7 +148,7 @@ class PushMessageAdmin(admin.ModelAdmin):
 
     search_fields = ["body", "sns_message_id"]
     list_display = ["id", "body", "error_message", "device", "sns_message_id", "date_created", "date_updated"]
-    readonly_fields = ["id", "device",  "body",  "data", "sns_message_id", "sns_response", "payload", "date_created", "date_updated"]
+    readonly_fields = ["id", "device", "body", "data", "sns_message_id", "sns_response", "payload", "date_created", "date_updated"]
 
     actions = ["resend_push_notification"]
 
@@ -157,18 +156,6 @@ class PushMessageAdmin(admin.ModelAdmin):
         error = json.loads(obj.sns_response).get("Error")
         if error:
             return error.get("Message")
-
-    def resend_push_notification(self, request, queryset):
-        if queryset.count() > 1:
-            messages.add_message(request, messages.ERROR, _("You can only send one push message at a time."))
-        push_message = queryset.get()
-
-        try:
-            handler = SNSHandler(device=push_message.device)
-            handler._send_payload(data=json.loads(push_message.data))
-            messages.add_message(request, messages.SUCCESS, _("Push message has been sent."))
-        except Exception as exc:
-            messages.add_message(request, messages.ERROR, str(exc))
 
     def resend_push_notification(self, request, queryset):
         if queryset.count() > 1:
