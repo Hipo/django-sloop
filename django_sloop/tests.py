@@ -37,6 +37,9 @@ class SNSHandlerTests(TestCase):
         handler = SNSHandler(self.ios_device)
         self.assertEqual(handler.application_arn, DJANGO_SLOOP_SETTINGS["SNS_IOS_APPLICATION_ARN"])
 
+        self.ios_device.is_sandbox_enabled = True
+        self.assertEqual(handler.application_arn, DJANGO_SLOOP_SETTINGS["SNS_IOS_SANDBOX_APPLICATION_ARN"])
+
     def test_get_android_application_arn(self):
         sns_client = Mock()
         SNSHandler.client = sns_client
@@ -82,13 +85,19 @@ class DeviceTests(TestCase):
         self.ios_device = Device.objects.create(user=self.user, push_token=TEST_IOS_PUSH_TOKEN, platform=Device.PLATFORM_IOS)
         self.android_device = Device.objects.create(user=self.user, push_token=TEST_ANDROID_PUSH_TOKEN, platform=Device.PLATFORM_ANDROID)
 
-    def test_send_ios_push_notification(self):
+    def check_send_ios_push_notification(self, is_sandbox=True):
         sns_client = Mock()
         sns_test_message_id = "test_message_" + str(randint(0, 9999))
         sns_client.publish.return_value = {
             "MessageId": sns_test_message_id
         }
         SNSHandler.client = sns_client
+
+        if is_sandbox:
+            self.ios_device.is_sandbox_enabled = True
+            payload_key = "APNS_SANDBOX"
+        else:
+            payload_key = "APNS"
 
         self.ios_device.sns_platform_endpoint_arn = "test_ios_arn"
         self.ios_device.save()
@@ -100,7 +109,7 @@ class DeviceTests(TestCase):
         self.assertEqual(call_kwargs["TargetArn"], self.ios_device.sns_platform_endpoint_arn)
         self.assertEqual(call_kwargs["MessageStructure"], "json")
         expected_message = {
-            'APNS': {
+            payload_key: {
                 'aps': {
                     'alert': "test_message",
                     'sound': 'test_sound',
@@ -113,7 +122,7 @@ class DeviceTests(TestCase):
         }
 
         actual_message = json.loads(call_kwargs["Message"])
-        actual_message["APNS"] = json.loads(actual_message["APNS"])
+        actual_message[payload_key] = json.loads(actual_message[payload_key])
 
         self.assertDictEqual(expected_message, actual_message)
 
@@ -122,6 +131,12 @@ class DeviceTests(TestCase):
         self.assertEqual(push_message.sns_response, json.dumps({
             "MessageId": sns_test_message_id
         }))
+
+    def test_send_ios_push_notification(self):
+        self.check_send_ios_push_notification(is_sandbox=False)
+
+    def test_send_ios_sandbox_push_notification(self):
+        self.check_send_ios_push_notification(is_sandbox=True)
 
     def test_send_android_push_notification(self):
         sns_client = Mock()
@@ -308,6 +323,23 @@ class DeviceAPITests(TestCase):
         self.assertEqual(response.status_code, self.status.HTTP_201_CREATED)
         device = self.user.devices.get(**data)
         self.assertEqual(response.data, DeviceSerializer(device).data)
+
+    def test_api_update_device(self):
+        from .serializers import DeviceSerializer
+
+        data = {
+            "push_token": "test_ios_push_token2",
+            "platform": Device.PLATFORM_IOS
+        }
+        response = self.client.post(self.create_delete_url, data=data)
+        self.assertEqual(response.status_code, self.status.HTTP_201_CREATED)
+        device = self.user.devices.get(**data)
+        self.assertEqual(response.data, DeviceSerializer(device).data)
+        date_updated = device.date_updated
+        # Update device.
+        self.client.post(self.create_delete_url, data=data)
+        device.refresh_from_db()
+        self.assertGreater(device.date_updated, date_updated)
 
     def test_api_delete_device(self):
         non_device_owner_client, non_device_owner = self.create_test_user_client()

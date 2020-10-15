@@ -2,7 +2,7 @@ import json
 
 from django.conf import settings
 from django.contrib.gis.db import models
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.utils import timezone
 from django.utils.encoding import smart_text
 from django.utils.translation import ugettext_lazy as _
@@ -91,6 +91,8 @@ class AbstractSNSDevice(models.Model):
     model = models.CharField(max_length=255, blank=True)
     sns_platform_endpoint_arn = models.CharField(_("SNS Platform Endpoint"), max_length=255, null=True, blank=True, unique=True)
 
+    is_sandbox_enabled = models.BooleanField(default=False, help_text="Changing this will clear the sns_platform_endpoint_arn")
+
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     date_created = models.DateTimeField(default=timezone.now)
@@ -109,6 +111,10 @@ class AbstractSNSDevice(models.Model):
             "user": str(self.user),
             "push_token": self.push_token,
         })
+
+    def clean(self):
+        if self.is_sandbox_enabled and self.platform != self.PLATFORM_IOS:
+            raise ValidationError({"is_sandbox_enabled": _("Sandbox can be enabled for iOS platforms")})
 
     def invalidate(self):
         self.deleted_at = timezone.now()

@@ -27,7 +27,15 @@ class Device(AbstractSNSDevice):
         pass
 ```
 
-4. Make sure that you fill necessary information at the settings file:
+4. Add your Device model to django admin.
+
+```python
+from django_sloop.admin import DeviceAdmin
+    
+admin.site.register(Device, DeviceAdmin)
+```
+
+5. Make sure that you fill necessary information at the settings file:
 
 ```python
 # settings.py
@@ -37,7 +45,7 @@ DJANGO_SLOOP_SETTINGS = {
     "AWS_ACCESS_KEY_ID": "",
     "AWS_SECRET_ACCESS_KEY": "",
     "SNS_IOS_APPLICATION_ARN": "test_ios_arn",
-    "SNS_IOS_SANDBOX_ENABLED": False,
+    "SNS_IOS_SANDBOX_APPLICATION_ARN": "test_ios_sandbox_arn",
     "SNS_ANDROID_APPLICATION_ARN": "test_android_arn",
     "LOG_SENT_MESSAGES": False,  # False by default.
     "DEFAULT_SOUND": "",
@@ -48,7 +56,7 @@ DJANGO_SLOOP_SETTINGS = {
 You cannot change the DEVICE_MODEL setting during the lifetime of a project (i.e. once you have made and migrated models that depend on it) without serious effort. The model it refers to must be available in the first migration of
 the app that it lives in.
 
-5. Create migrations for newly created Device model and migrate.
+6. Create migrations for newly created Device model and migrate.
 
 **Note:** django_sloop's migrations must run after your Device is created. If you run into a problem while running migrations add following to the your migration file where the Device is created.
 ```
@@ -57,7 +65,7 @@ run_before = [
 ]
 ```
 
-6. Add django_sloop.models.PushNotificationMixin to your User model.
+7. Add django_sloop.models.PushNotificationMixin to your User model.
 ```python
 class User(PushNotificationMixin, ...):
     pass
@@ -67,7 +75,7 @@ user.send_push_notification_async(message="Sample push notification.")
 ```
 
 
-7. Add django_sloop.admin.SloopAdminMixin to your UserAdmin to enable sending push messages to users from Django admin panel.
+8. Add django_sloop.admin.SloopAdminMixin to your UserAdmin to enable sending push messages to users from Django admin panel.
 
 ```python
 # admin.py
@@ -81,7 +89,7 @@ class UserAdmin(SloopAdminMixin, admin.ModelAdmin):
     
 ```
 
-8. Add django rest framework urls to create and delete device.
+9. Add django rest framework urls to create and delete device.
 
 ```python
 # urls.py
@@ -96,3 +104,75 @@ urlpatterns = [
 ```
 
 Done!
+
+
+## Mobile Client Integration
+
+- Mobile clients should call the `create-or-update-device` endpoint in the following cases.
+    1. First time you access the push token.
+    2. If you already have push token you should send the same request to update last time the device is used. It's best to call this endpoint each time app is opened or come back from background. 
+
+    Request: **POST /api/devices/**  
+    Payload:
+    ```
+    {
+        "push_token": "required string",
+        "platform": "required ios or android",
+        "model": "optional string",
+        "locale": "optional string default to `en_US`",
+    }
+    ``` 
+
+- Mobile clients should call the `delete-device` endpoint when user log outs.
+    
+    Request: **DELETE /api/devices/**  
+    Payload:
+    ```
+    {
+        "push_token": "required string",
+    }
+    ``` 
+
+
+**Endpoint details will be available in the projects api documentation as well. There can be project level changes so please go to projects api documentation.**
+
+CONTRIBUTION
+=================
+
+**TESTS**
+- Make sure that you add the test for contributed field to test/test_fields.py
+and run with command before sending a pull request:
+
+```bash
+$ pip install tox  # if not already installed
+$ tox
+```
+
+Or, if you prefer using Docker (recommended):
+
+```bash
+docker build -t django-sloop .
+docker run -v $(pwd):/app -it django-sloop /bin/bash
+tox
+```
+
+**README**
+- Make sure that you add the documentation for the field added to README.md
+
+
+LICENSE
+====================
+
+Copyright DRF EXTRA FIELDS HIPO
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
