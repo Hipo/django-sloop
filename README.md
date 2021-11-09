@@ -1,7 +1,6 @@
 ![Sloop](/docs/img/splash.jpg?raw=true "Django-Sloop")
 
-
-Django Sloop is the fastest & most reliable RESTful push notification service so far. This package contains some tools that will ease the implementation of sloop into django projects.
+This package contains some tools that will ease the implementation of push notifications using AWS SNS and other backends into django projects.
 
 # Django-Sloop
 
