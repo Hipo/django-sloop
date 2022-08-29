@@ -84,12 +84,12 @@ class UserAdmin(SloopAdminMixin, admin.ModelAdmin):
 
 ```python
 # urls.py
-from django.conf.urls import url
+from django.urls import path
 from django.urls import include
 
 urlpatterns = [
     # ...
-    url(r'^api/devices/', include('django_sloop.urls')),
+    path('api/devices/', include('django_sloop.urls')),
     # ...
 ]
 ```

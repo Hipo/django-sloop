@@ -1,7 +1,6 @@
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib import messages
-from django.urls import reverse
+from django.urls import reverse, path
 from django.utils.http import urlencode
 from django.views.generic import FormView
 from django.template.response import TemplateResponse
@@ -87,7 +86,7 @@ class SloopAdminMixin(object):
     def get_urls(self):
         urls = super(SloopAdminMixin, self).get_urls()
         return [
-            url(r'^send-push-notification/$', self.admin_site.admin_view(self.push_notification_view),
+            path('send-push-notification/', self.admin_site.admin_view(self.push_notification_view),
                 name='%s_%s_send_push_notification' % (self.model._meta.app_label, self.model._meta.model_name))
         ] + urls
 
