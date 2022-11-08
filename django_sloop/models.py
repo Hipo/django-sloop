@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.gis.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 from django.template.defaultfilters import truncatechars
 
@@ -105,7 +105,7 @@ class AbstractSNSDevice(models.Model):
         abstract = True
 
     def __str__(self):
-        return smart_text(_("Push Token %(push_token)s for %(user)s") % {
+        return smart_str(_("Push Token %(push_token)s for %(user)s") % {
             "user": str(self.user),
             "push_token": self.push_token,
         })
